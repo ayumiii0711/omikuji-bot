@@ -5,7 +5,13 @@ import random
 
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import Application, CommandHandler, ContextTypes
+from telegram.ext import (
+    Application,
+    CommandHandler,
+    ContextTypes,
+    MessageHandler,
+    filters,
+)
 
 # .env ファイルがある場合は読み込む（Railway本番ではVariablesを使う）
 load_dotenv()
@@ -257,6 +263,11 @@ async def omikuji_command(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     await update.message.reply_text(result_text)
 
 
+async def omikuji_japanese_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """ /おみくじ のような日本語コマンド風テキストにも対応 """
+    await omikuji_command(update, context)
+
+
 def main() -> None:
     # 環境変数からトークンを取得（未設定なら分かりやすく停止）
     token = os.getenv("TELEGRAM_BOT_TOKEN")
@@ -270,7 +281,14 @@ def main() -> None:
     app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("omikuji", omikuji_command))
-    app.add_handler(CommandHandler("おみくじ", omikuji_command))
+    # Telegramの正式コマンドは英数字/アンダースコア制約があるため、
+    # 日本語の「/おみくじ」はテキストとして判定して対応する。
+    app.add_handler(
+        MessageHandler(
+            filters.TEXT & filters.Regex(r"^/おみくじ(?:@\w+)?$"),
+            omikuji_japanese_command,
+        )
+    )
 
     logger.info("Bot started. Waiting for commands...")
     app.run_polling()

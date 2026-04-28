@@ -5,24 +5,16 @@ import random
 
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import (
-    Application,
-    CommandHandler,
-    ContextTypes,
-    MessageHandler,
-    filters,
-)
+from telegram.ext import Application, CommandHandler, ContextTypes, MessageHandler, filters
 
-# .env ファイルがある場合は読み込む（Railway本番ではVariablesを使う）
+# ローカル実行用: .env があれば読み込む（Railway本番では Variables を使う）
 load_dotenv()
 
-# ログを見やすく設定（エラー時の切り分けに便利）
 logging.basicConfig(
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     level=logging.INFO,
 )
 logger = logging.getLogger(__name__)
-
 
 fortunes = ["大吉", "中吉", "小吉", "吉", "末吉", "凶", "大凶"]
 
@@ -235,54 +227,48 @@ lucky_people = [
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """ /start コマンド: BOTの使い方を案内 """
-    message = (
-        "おみくじBOTへようこそ。\n\n"
+    """使い方を案内する /start"""
+    await update.message.reply_text(
+        "おみくじBOTです。\n\n"
         "使い方:\n"
         "/omikuji または /おみくじ を送ると、おみくじを引けます。"
     )
-    await update.message.reply_text(message)
 
 
-async def omikuji_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """ /omikuji コマンド: 演出付きで結果を返す """
-    # 1. 🙏
+async def run_omikuji(update: Update) -> None:
+    """おみくじの演出と結果送信"""
     await update.message.reply_text("🙏")
     await asyncio.sleep(1)
-
-    # 2. ⛩
     await update.message.reply_text("⛩")
     await asyncio.sleep(1)
 
-    # 3. 運勢・コメント・ラッキーパーソンをランダムで選んで表示
     fortune = random.choice(fortunes)
     comment = random.choice(comments)
     lucky_person = random.choice(lucky_people)
+    await update.message.reply_text(
+        f"{fortune}\n{comment}\n\nラッキーパーソン：{lucky_person}"
+    )
 
-    result_text = f"{fortune}\n{comment}\n\nラッキーパーソン：{lucky_person}"
-    await update.message.reply_text(result_text)
+
+async def omikuji_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    await run_omikuji(update)
 
 
 async def omikuji_japanese_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """ /おみくじ のような日本語コマンド風テキストにも対応 """
-    await omikuji_command(update, context)
+    await run_omikuji(update)
 
 
 def main() -> None:
-    # 環境変数からトークンを取得（未設定なら分かりやすく停止）
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    token = (os.getenv("TELEGRAM_BOT_TOKEN") or "").strip()
     if not token:
         raise RuntimeError(
             "TELEGRAM_BOT_TOKEN が設定されていません。"
             " RailwayのVariablesまたはローカルの .env に設定してください。"
         )
 
-    # Applicationを作成してコマンドを登録
     app = Application.builder().token(token).build()
     app.add_handler(CommandHandler("start", start_command))
     app.add_handler(CommandHandler("omikuji", omikuji_command))
-    # Telegramの正式コマンドは英数字/アンダースコア制約があるため、
-    # 日本語の「/おみくじ」はテキストとして判定して対応する。
     app.add_handler(
         MessageHandler(
             filters.TEXT & filters.Regex(r"^/おみくじ(?:@\w+)?$"),

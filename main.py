@@ -260,8 +260,12 @@ async def omikuji_japanese_command(update: Update, context: ContextTypes.DEFAULT
 
 def main() -> None:
     token_raw = os.getenv("TELEGRAM_BOT_TOKEN")
-logger.info("ENV CHECK: TELEGRAM_BOT_TOKEN exists=%s len=%s", token_raw is not None, len(token_raw or ""))
-token = (token_raw or "").strip()
+    logger.info(
+        "ENV CHECK: TELEGRAM_BOT_TOKEN exists=%s len=%s",
+        token_raw is not None,
+        len(token_raw or ""),
+    )
+    token = (token_raw or "").strip()
 
     if not token:
         raise RuntimeError(
@@ -281,7 +285,6 @@ token = (token_raw or "").strip()
 
     logger.info("Bot started. Waiting for commands...")
     app.run_polling()
-
 
 if __name__ == "__main__":
     main()

@@ -270,7 +270,7 @@ async def omikuji_japanese_command(update: Update, context: ContextTypes.DEFAULT
 
 def main() -> None:
     # 環境変数からトークンを取得（未設定なら分かりやすく停止）
-    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    token = os.getenv("8657513528:AAGcVyjS76mpwDNUD2HlMWieHHMgSUAnaNY")
     if not token:
         raise RuntimeError(
             "TELEGRAM_BOT_TOKEN が設定されていません。"

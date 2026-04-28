@@ -259,7 +259,10 @@ async def omikuji_japanese_command(update: Update, context: ContextTypes.DEFAULT
 
 
 def main() -> None:
-    token = (os.getenv("TELEGRAM_BOT_TOKEN") or "").strip()
+    token_raw = os.getenv("TELEGRAM_BOT_TOKEN")
+logger.info("ENV CHECK: TELEGRAM_BOT_TOKEN exists=%s len=%s", token_raw is not None, len(token_raw or ""))
+token = (token_raw or "").strip()
+
     if not token:
         raise RuntimeError(
             "TELEGRAM_BOT_TOKEN が設定されていません。"
